@@ -21,7 +21,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let reader = std::io::BufReader::new(file);
 
     for line_result in reader.lines() {
-        let line = line_result.expect("could not read the line");
+        let line = match line_result {
+            Ok(line) => line,
+            Err(err) => {
+                return Err(err.into());
+            }
+        };
 
         if line.contains(&args.pattern) {
             println!("{}", line);
