@@ -1,4 +1,6 @@
+use anyhow::{Context, Result};
 use std::io::BufRead;
+use std::io::{self, Write};
 
 use clap::Parser;
 
@@ -8,15 +10,14 @@ struct Cli {
     path: std::path::PathBuf,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
     let args = Cli::parse();
 
-    let file = match std::fs::File::open(&args.path) {
-        Ok(file) => file,
-        Err(err) => {
-            return Err(err.into());
-        }
-    };
+    let sdtout = io::stdout();
+    let mut handle = io::BufWriter::new(sdtout);
+
+    let file = std::fs::File::open(&args.path)
+        .with_context(|| format!("could not read file `{}`", &args.path.display()))?;
 
     let reader = std::io::BufReader::new(file);
 
@@ -29,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         if line.contains(&args.pattern) {
-            println!("{}", line);
+            writeln!(handle, "{}", line)?;
         }
     }
 
