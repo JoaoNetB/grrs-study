@@ -8,10 +8,15 @@ struct Cli {
     path: std::path::PathBuf,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
-    let file = std::fs::File::open(&args.path).expect("could not open the file");
+    let file = match std::fs::File::open(&args.path) {
+        Ok(file) => file,
+        Err(err) => {
+            return Err(err.into());
+        }
+    };
 
     let reader = std::io::BufReader::new(file);
 
@@ -22,4 +27,6 @@ fn main() {
             println!("{}", line);
         }
     }
+
+    Ok(())
 }
